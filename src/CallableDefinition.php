@@ -12,12 +12,12 @@ class CallableDefinition extends Definition
      */
     private $closure;
 
-    public function setClosure(callable $closure)
+    public function setClosure( $closure)
     {
         $this->closure = $closure;
     }
 
-    public function getClosure(): callable
+    public function getClosure()
     {
         return $this->closure;
     }
