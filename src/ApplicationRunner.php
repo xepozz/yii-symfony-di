@@ -25,6 +25,7 @@ use Symfony\Component\ExpressionLanguage\Expression;
 use Throwable;
 use Yiisoft\Config\Config;
 use Yiisoft\Di\Container;
+use Yiisoft\Di\Contracts\ServiceProviderInterface;
 use Yiisoft\ErrorHandler\ErrorHandler;
 use Yiisoft\ErrorHandler\Middleware\ErrorCatcher;
 use Yiisoft\ErrorHandler\Renderer\HtmlRenderer;
@@ -62,7 +63,7 @@ final class ApplicationRunner
         $this->registerErrorHandler($errorHandler);
 
         [$config, $container] = $this->createYiiConfig();
-        $container = $this->wrapYiiConfigToSymfonyConfig($config->get('web'), $container);
+        $container = $this->wrapYiiConfigToSymfonyConfig($config->get('web'), $config->get('providers'), $container);
 
         // Register error handler with real container-configured dependencies.
 //        $this->registerErrorHandler($container->get(ErrorHandler::class), $errorHandler);
@@ -95,9 +96,9 @@ final class ApplicationRunner
         }
     }
 
-    private function wrapYiiConfigToSymfonyConfig(array $yiiDefinitions, ContainerInterface $yiiContainer)
+    private function wrapYiiConfigToSymfonyConfig(array $yiiDefinitions, array $yiiProviders, ContainerInterface $yiiContainer)
     {
-        $yiiDefinitions = [
+        $yiiDefinitions2 = [
             Stub::class => [
                 'class' => Stub::class,
                 '__construct()' => [
@@ -112,9 +113,7 @@ final class ApplicationRunner
                     new \Yiisoft\Factory\Definition\CallableDefinition(fn() => 123),
                 ],
             ],
-            Stub1::class => function (Stub2 $stub2) {
-                return new Stub1();
-            },
+            Stub1::class => new Stub1(),
             Stub2::class => [
                 'class' => Stub2::class,
                 '__construct()' => [
@@ -123,19 +122,22 @@ final class ApplicationRunner
             ],
         ];
         $instanceof = [];
-        $containerBuilder = new ContainerBuilder();
+        $containerBuilder = new MyContainerBuilder($yiiContainer);
+//        $containerBuilder->merge();
         $containerBuilder->setProxyInstantiator(new CallableInitiator(new RuntimeInstantiator()));
         $containerBuilder->addExpressionLanguageProvider(new CallableExpressionProvider());
 
         $loader = new PhpFileLoader($containerBuilder, new FileLocator(__DIR__));
 
-//        $serviceConfigurator = new ServicesConfigurator($containerBuilder, $loader, $instanceof);
-//        $serviceConfigurator
-//            ->load('App\\', '../src/Installer*')
-////            ->exclude('../src/{Dto,Auth,Blog,Exception,Factory,Formatter,User,Middleware,Provider}')
-//            ->autoconfigure(true)
-//            ->autowire(true);
+        $serviceConfigurator = new ServicesConfigurator($containerBuilder, $loader, $instanceof);
+        $serviceConfigurator
+            ->defaults()
+            ->public(true)
+            ->autowire(true)
+            ->autoconfigure(true);
 
+        $this->loadThirdPartyServices($serviceConfigurator);
+        $this->ignoreNonServices($serviceConfigurator);
 
 //        $containerBuilder->set(Stub1::class, new Stub1());
 
@@ -144,23 +146,42 @@ final class ApplicationRunner
 
         $symfonyDefenitions = [];
         foreach ($yiiDefinitions as $class => $yiiDefinition) {
+            if ($class === 'Yiisoft\\Cache\\File\\FileCache') {
+                $var = true;
+            }
+            if ($class === 'Yiisoft\\DataResponse\\DataResponseFactoryInterface') {
+                $var = true;
+            }
+            if ($class === 'App\\Blog\\PostRepository') {
+                $var = true;
+            }
+            if ($class === 'App\\Blog\\BlogService') {
+                $var = true;
+            }
             $definition = $this->creatDefinition($yiiContainer, $class, $yiiDefinition);
             if ($definition instanceof Definition) {
                 $containerBuilder->setDefinition($class, $definition);
             } else {
+                $containerBuilder->setDefinition($class, $definition);
                 $containerBuilder->set($class, $definition);
             }
-            $symfonyDefenitions[$class] = $definition;
         }
 
+        $proxy = new ContainerConfigProxy($containerBuilder);
+        foreach ($yiiProviders as $yiiProvider) {
+            /* @var ServiceProviderInterface $provider */
+            $provider = new $yiiProvider;
+            $provider->register($proxy);
+        }
 //        var_dump($symfonyDefenitions);
         $containerBuilder->compile();
+        $proxy->injectServices();
 //        dd($containerBuilder->getDefinitions());
 //        $loader = new PhpFileLoader($containerBuilder, new FileLocator(__DIR__ . '/../config'));
 //        $loader->load('services.php');
 //        $s = $containerBuilder->get(RouteCollectionInterface::class);
-        $s = $containerBuilder->get(Stub::class);
-        dd($s);
+//        $s = $containerBuilder->get(Stub1::class);
+//        dd($s);
 
         return $containerBuilder;
     }
@@ -222,13 +243,27 @@ final class ApplicationRunner
     {
         $definition = new Definition($class);
         if (is_array($yiiDefinition)) {
+            if (isset($yiiDefinition['definition'])){
+                $definition = new CallableDefinition();
+                $definition->setLazy(true);
+                $definition->setClosure($yiiDefinition['definition']);
+                return $definition;
+            }
             $arguments = $yiiDefinition['__construct()'] ?? [];
             $arguments = $this->processArguments($arguments, $container);
+            $class = $yiiDefinition['class'] ?? $class;
+
+            $definition->setClass($class);
             $definition->setArguments($arguments);
         } else if (is_callable($yiiDefinition)) {
+            if ($class === 'Yiisoft\\Cache\\File\\FileCache') {
+//                dd($yiiDefinition);
+                $var = true;
+            }
             $definition = new CallableDefinition();
             $definition->setLazy(true);
             $definition->setClosure($yiiDefinition);
+            return $definition;
         }
         $definition->setPublic(true);
 //        $definition->setShared(true);
@@ -241,7 +276,11 @@ final class ApplicationRunner
     {
         $result = [];
         foreach ($arguments as $key => $argument) {
-            $result[$key] = $this->processArgument($argument);
+            if (!is_numeric($key)) {
+                $result['$' . $key] = $this->processArgument($argument);
+            } else {
+                $result[] = $this->processArgument($argument);
+            }
         }
         return $result;
     }
@@ -293,6 +332,62 @@ final class ApplicationRunner
 
         return $argument;
     }
+
+    private function loadThirdPartyServices(ServicesConfigurator $serviceConfigurator): void
+    {
+        $configs = [
+            [
+                'namespace' => 'App\\',
+                'path' => 'src/',
+            ],
+            [
+                'namespace' => 'Yiisoft\\Access\\',
+                'path' => 'vendor/yiisoft/access/src/',
+            ],
+            [
+                'namespace' => 'Yiisoft\\Csrf\\',
+                'path' => 'vendor/yiisoft/csrf/src/',
+            ],
+            [
+                'namespace' => 'Yiisoft\\DataResponse\\',
+                'path' => 'vendor/yiisoft/data-response/src/',
+            ],
+            [
+                'namespace' => 'Yiisoft\\User\\',
+                'path' => 'vendor/yiisoft/user/src/',
+            ],
+//            [
+//                'namespace' => 'Cycle\\ORM\\',
+//                'path' => 'vendor/cycle/orm/src/',
+//            ],
+        ];
+        foreach ($configs as $config) {
+            $serviceConfigurator
+                ->load($config['namespace'], sprintf('../%s/*', $config['path']))
+                ->autoconfigure(true)
+                ->autowire(true);
+        }
+    }
+
+    private function ignoreNonServices(ServicesConfigurator $serviceConfigurator)
+    {
+        $configs = [
+            'App\Blog\PostStatus',
+            'App\CallableInitiator',
+            'App\User\User',
+            'Yiisoft\DataResponse\DataResponse',
+            'Yiisoft\User\Event\AfterLogin',
+            'Yiisoft\User\Event\BeforeLogin',
+            'Yiisoft\User\Event\AfterLogout',
+            'Yiisoft\User\Event\BeforeLogout',
+            'Yiisoft\User\Login\Cookie\CookieLogin',
+            'Yiisoft\User\Login\Cookie\CookieLoginMiddleware',
+        ];
+        foreach ($configs as $config) {
+            $serviceConfigurator
+                ->remove($config);
+        }
+    }
 }
 
 class Stub
@@ -333,4 +428,69 @@ class Stub2
     {
         $this->value = $value;
     }
+}
+
+class MyContainerBuilder extends ContainerBuilder
+{
+    private ContainerInterface $container;
+
+    public function __construct(ContainerInterface $container)
+    {
+        $this->container = $container;
+        parent::__construct();
+    }
+
+    public function get(string $id, int $invalidBehavior = SymfonyContainerInterface::EXCEPTION_ON_INVALID_REFERENCE)
+    {
+        try {
+            return parent::get($id, $invalidBehavior);
+        } catch (\Throwable $e) {
+            return $this->container->get($id);
+        }
+    }
+}
+
+class ContainerConfigProxy extends Container
+{
+    private ContainerBuilder $containerBuilder;
+    private $services = [];
+
+    public function __construct(ContainerBuilder $containerBuilder)
+    {
+        $this->containerBuilder = $containerBuilder;
+    }
+
+    public function get($id)
+    {
+        return $this->containerBuilder->get($id);
+    }
+
+    public function has($id): bool
+    {
+        return $this->containerBuilder->has($id);
+    }
+
+    public function set(string $id, $service): void
+    {
+        if ($id==='Psr\\Container\\ContainerInterface'){
+            return;
+        }
+        if (is_object($service)) {
+            $this->services[$id] = $service;
+            $definition = new Definition($id);
+            $definition->setSynthetic(true);
+            $this->containerBuilder->setDefinition($id, $definition);
+            return;
+        }
+
+        throw new \RuntimeException('Not object config ' . $id);
+    }
+
+    public function injectServices(): void
+    {
+        foreach ($this->services as $id => $service) {
+            $this->containerBuilder->set($id, $service);
+        }
+    }
+
 }

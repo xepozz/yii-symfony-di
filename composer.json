@@ -95,9 +95,12 @@
             "output-directory": "config/packages"
         },
         "config-plugin": {
+            "services": [
+                "config/services.php"
+            ],
             "common": [
                 "config/common/*.php",
-                "config/services.php"
+                "$services"
             ],
             "params": [
                 "config/params.php",
