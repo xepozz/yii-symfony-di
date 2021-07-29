@@ -3,249 +3,39 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit;
 
+use App\CallableExpressionProvider;
+use App\CallableInitiator;
 use App\DefinitionConverter;
-use App\Tests\Helper\SymfonyDefinitionBuilder;
-use App\Tests\Stub\FlexibleStub;
-use App\Tests\Stub\ScalarStub;
-use PHPUnit\Framework\TestCase;
+use App\ObjectExpressionProvider;
+use Symfony\Bridge\ProxyManager\LazyProxy\Instantiator\RuntimeInstantiator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Definition as SymfonyDefinition;
-use Symfony\Component\DependencyInjection\Reference as SymfonyReference;
-use Yiisoft\Factory\Definition\DynamicReference;
-use Yiisoft\Factory\Definition\Reference;
 
-class ConverterTest extends TestCase
+/**
+ * This test check full integration
+ */
+final class ConverterTest extends DefinitionConverterTestCase
 {
     /**
      * @dataProvider convertDataProvider
      */
-    public function testConvert(array $definitions, array $expected)
+    public function testConvert(array $definitions, array $expected): void
     {
         $providers = [];
         $containerBuilder = $this->createContainerBuilder();
         $wrapper = new DefinitionConverter($containerBuilder);
         $wrapper->wrap($definitions, $providers);
         $result = $this->extractDefinitions($wrapper);
-//        var_dump($result);
-        $this->assertEquals($expected, $result);
-    }
 
-    public function convertDataProvider()
-    {
-        return [
-            'simple' => [
-                [
-                    FlexibleStub::class => [
-                        'class' => FlexibleStub::class,
-                        '__construct()' => [
-                            12345,
-                        ],
-                    ],
-                ],
-                [
-                    FlexibleStub::class => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
-                        ->withArguments(12345)
-                        ->build(),
-                ],
-            ],
-            'aliases' => [
-                [
-                    'alias_for_flexible' => [
-                        'class' => FlexibleStub::class,
-                        '__construct()' => [
-                            12345,
-                        ],
-                    ],
-                ],
-                [
-                    'alias_for_flexible' => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
-                        ->withArguments(12345)
-                        ->build(),
-                ],
-            ],
-            'different argument types' => [
-                [
-                    'int' => [
-                        'class' => FlexibleStub::class,
-                        '__construct()' => [
-                            12345,
-                        ],
-                    ],
-                    'string' => [
-                        'class' => FlexibleStub::class,
-                        '__construct()' => [
-                            'string',
-                        ],
-                    ],
-                    'float' => [
-                        'class' => FlexibleStub::class,
-                        '__construct()' => [
-                            10.12345,
-                        ],
-                    ],
-                    'null' => [
-                        'class' => FlexibleStub::class,
-                        '__construct()' => [
-                            null,
-                        ],
-                    ],
-                    'bool' => [
-                        'class' => FlexibleStub::class,
-                        '__construct()' => [
-                            false,
-                        ],
-                    ],
-                    'array' => [
-                        'class' => FlexibleStub::class,
-                        '__construct()' => [
-                            ['key' => 'value'],
-                        ],
-                    ],
-                ],
-                [
-                    'int' => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
-                        ->withArguments(12345)
-                        ->build(),
-                    'string' => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
-                        ->withArguments('string')
-                        ->build(),
-                    'float' => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
-                        ->withArguments(10.12345)
-                        ->build(),
-                    'null' => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
-                        ->withArguments(null)
-                        ->build(),
-                    'bool' => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
-                        ->withArguments(false)
-                        ->build(),
-                    'array' => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
-                        ->withArguments(['key' => 'value'])
-                        ->build(),
-                ],
-            ],
-            'multiple arguments' => [
-                [
-                    ScalarStub::class => [
-                        'class' => ScalarStub::class,
-                        '__construct()' => [
-                            'Dmitry',
-                            100,
-                            100.5,
-                            null,
-                        ],
-                    ],
-                ],
-                [
-                    ScalarStub::class => SymfonyDefinitionBuilder::new()
-                        ->withClass(ScalarStub::class)
-                        ->withArguments(
-                            'Dmitry',
-                            100,
-                            100.5,
-                            null
-                        )
-                        ->build(),
-                ],
-            ],
-            'the same object' => [
-                [
-                    'alias_for_flexible' => [
-                        'class' => FlexibleStub::class,
-                        '__construct()' => [
-                            56789,
-                        ],
-                    ],
-                    FlexibleStub::class => [
-                        'class' => FlexibleStub::class,
-                        '__construct()' => [
-                            12345,
-                        ],
-                    ],
-                ],
-                [
-                    'alias_for_flexible' => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
-                        ->withArguments(56789)
-                        ->build(),
-                    FlexibleStub::class => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
-                        ->withArguments(12345)
-                        ->build(),
-                ],
-            ],
-            'parse dynamic definition' => [
-                [
-                    FlexibleStub::class => [
-                        'class' => FlexibleStub::class,
-                        '__construct()' => [
-                            DynamicReference::to([
-                                'class' => FlexibleStub::class,
-                                '__construct()' => [
-                                    12345,
-                                ],
-                            ]),
-                        ],
-                    ],
-                ],
-                [
-                    FlexibleStub::class => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
-                        ->withArguments(
-                            SymfonyDefinitionBuilder::new()
-                                ->withClass(FlexibleStub::class)
-                                ->withArguments(12345)
-                                ->withPublic(false)
-                                ->withAutoconfigured(false)
-                                ->withAutowired(false)
-                                ->build()
-                        )
-                        ->build(),
-                ],
-            ],
-            'parse reference' => [
-                [
-                    FlexibleStub::class => [
-                        'class' => FlexibleStub::class,
-                        '__construct()' => [
-                            Reference::to('another_class'),
-                        ],
-                    ],
-                    'another_class' => [
-                        'class' => FlexibleStub::class,
-                        '__construct()' => [
-                            true,
-                        ],
-                    ],
-                ],
-                [
-                    FlexibleStub::class => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
-                        ->withArguments(
-                            new SymfonyReference('another_class')
-                        )
-                        ->build(),
-                    'another_class' => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
-                        ->withArguments(
-                            true,
-                        )
-                        ->build(),
-                ],
-            ],
-        ];
+        $this->assertEquals($expected, $result);
     }
 
     public function createContainerBuilder(): ContainerBuilder
     {
-        return new ContainerBuilder(null);
+        $containerBuilder = new ContainerBuilder(null);
+        $containerBuilder->setProxyInstantiator(new CallableInitiator(new RuntimeInstantiator()));
+        $containerBuilder->addExpressionLanguageProvider(new CallableExpressionProvider());
+        $containerBuilder->addExpressionLanguageProvider(new ObjectExpressionProvider());
+        return $containerBuilder;
     }
 
     private function extractDefinitions(DefinitionConverter $wrapper): array

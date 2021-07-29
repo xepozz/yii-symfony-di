@@ -7,6 +7,12 @@ use Symfony\Component\DependencyInjection\Definition;
 
 class CallableDefinition extends Definition
 {
+    public function __construct(string $class = null, array $arguments = [])
+    {
+        parent::__construct($class, $arguments);
+        $this->setLazy(true);
+    }
+
     /**
      * @var callable
      */

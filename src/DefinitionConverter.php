@@ -19,7 +19,8 @@ class DefinitionConverter
 {
     public ContainerBuilder $containerBuilder;
 
-    public function __construct(ContainerBuilder $containerBuilder)
+    // temporary it can be null
+    public function __construct(?ContainerBuilder $containerBuilder)
     {
         $this->containerBuilder = $containerBuilder;
     }
@@ -58,26 +59,41 @@ class DefinitionConverter
 //        return $proxy;
     }
 
+    public function parse(array $yiiDefinitions)
+    {
+        $definitions = [];
+        foreach ($yiiDefinitions as $class => $yiiDefinition) {
+            $definition = $this->creatDefinition($class, $yiiDefinition);
+            if ($definition instanceof Definition) {
+                // Force clear all changes
+                // TODO: fix that
+                $definition->setChanges([]);
+            }
+            $definitions[$class] = $definition;
+        }
+        return$definitions;
+    }
+
     private function creatDefinition(string $class, $yiiDefinition)
     {
         $definition = new Definition($class);
         if (is_array($yiiDefinition)) {
+            $class = $yiiDefinition['class'] ?? $class;
             if (isset($yiiDefinition['definition'])) {
-                $definition = new CallableDefinition();
+                $definition = new CallableDefinition($class);
                 $definition->setLazy(true);
-                $definition->setClosure($yiiDefinition['definition']);
+                $definition->setClosure(($yiiDefinition['definition']));
                 return $definition;
             }
             $arguments = $yiiDefinition['__construct()'] ?? [];
             $arguments = $this->processArguments($arguments);
-            $class = $yiiDefinition['class'] ?? $class;
 
             $definition->setClass($class);
             $definition->setArguments($arguments);
         } else if (is_callable($yiiDefinition)) {
             $definition = new CallableDefinition();
             $definition->setLazy(true);
-            $definition->setClosure($yiiDefinition);
+//            $definition->setClosure(new SerializableClosure($yiiDefinition));
             return $definition;
         } elseif (is_object($yiiDefinition)) {
             $definition = new InlineDefinition();
@@ -88,8 +104,6 @@ class DefinitionConverter
         } else if (is_string($yiiDefinition) && class_exists($yiiDefinition)) {
             $definition->setClass($yiiDefinition);
             return $definition;
-
-            return $definition1;
         }
         $definition->setPublic(true);
 //        $definition->setShared(true);
