@@ -10,7 +10,9 @@ use App\Tests\Stub\ScalarStub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition as SymfonyDefinition;
+use Symfony\Component\DependencyInjection\Reference as SymfonyReference;
 use Yiisoft\Factory\Definition\DynamicReference;
+use Yiisoft\Factory\Definition\Reference;
 
 class ConverterTest extends TestCase
 {
@@ -89,6 +91,12 @@ class ConverterTest extends TestCase
                             null,
                         ],
                     ],
+                    'bool' => [
+                        'class' => FlexibleStub::class,
+                        '__construct()' => [
+                            false,
+                        ],
+                    ],
                     'array' => [
                         'class' => FlexibleStub::class,
                         '__construct()' => [
@@ -112,6 +120,10 @@ class ConverterTest extends TestCase
                     'null' => SymfonyDefinitionBuilder::new()
                         ->withClass(FlexibleStub::class)
                         ->withArguments(null)
+                        ->build(),
+                    'bool' => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withArguments(false)
                         ->build(),
                     'array' => SymfonyDefinitionBuilder::new()
                         ->withClass(FlexibleStub::class)
@@ -194,6 +206,36 @@ class ConverterTest extends TestCase
                                 ->withAutoconfigured(false)
                                 ->withAutowired(false)
                                 ->build()
+                        )
+                        ->build(),
+                ],
+            ],
+            'parse reference' => [
+                [
+                    FlexibleStub::class => [
+                        'class' => FlexibleStub::class,
+                        '__construct()' => [
+                            Reference::to('another_class'),
+                        ],
+                    ],
+                    'another_class' => [
+                        'class' => FlexibleStub::class,
+                        '__construct()' => [
+                            true,
+                        ],
+                    ],
+                ],
+                [
+                    FlexibleStub::class => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withArguments(
+                            new SymfonyReference('another_class')
+                        )
+                        ->build(),
+                    'another_class' => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withArguments(
+                            true,
                         )
                         ->build(),
                 ],
