@@ -10,6 +10,7 @@ use App\Tests\Stub\ScalarStub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition as SymfonyDefinition;
+use Yiisoft\Factory\Definition\DynamicReference;
 
 class ConverterTest extends TestCase
 {
@@ -168,23 +169,32 @@ class ConverterTest extends TestCase
                         ->build(),
                 ],
             ],
-            'array as argument' => [
+            'parse dynamic definition' => [
                 [
                     FlexibleStub::class => [
                         'class' => FlexibleStub::class,
                         '__construct()' => [
-                            [
-                                'key' => 'value'
-                            ],
+                            DynamicReference::to([
+                                'class' => FlexibleStub::class,
+                                '__construct()' => [
+                                    12345,
+                                ],
+                            ]),
                         ],
                     ],
                 ],
                 [
                     FlexibleStub::class => SymfonyDefinitionBuilder::new()
                         ->withClass(FlexibleStub::class)
-                        ->withArguments([
-                            'key' => 'value'
-                        ])
+                        ->withArguments(
+                            SymfonyDefinitionBuilder::new()
+                                ->withClass(FlexibleStub::class)
+                                ->withArguments(12345)
+                                ->withPublic(false)
+                                ->withAutoconfigured(false)
+                                ->withAutowired(false)
+                                ->build()
+                        )
                         ->build(),
                 ],
             ],

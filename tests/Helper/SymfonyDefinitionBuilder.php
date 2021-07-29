@@ -42,9 +42,30 @@ class SymfonyDefinitionBuilder
         $new->definition->setArguments($arguments);
         return $new;
     }
+    public function withPublic(bool $public)
+    {
+        $new = clone $this;
+        $new->definition->setPublic($public);
+        return $new;
+    }
+
+    public function withAutoconfigured(bool $autoconfigured)
+    {
+        $new = clone $this;
+        $new->definition->setAutoconfigured($autoconfigured);
+        return $new;
+    }
+
+    public function withAutowired(bool $autowired)
+    {
+        $new = clone $this;
+        $new->definition->setAutowired($autowired);
+        return $new;
+    }
 
     public function build()
     {
+        $this->definition->setChanges([]);
         return $this->definition;
     }
 

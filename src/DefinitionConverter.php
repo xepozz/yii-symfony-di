@@ -29,6 +29,9 @@ class DefinitionConverter
         foreach ($yiiDefinitions as $class => $yiiDefinition) {
             $definition = $this->creatDefinition($class, $yiiDefinition);
             if ($definition instanceof Definition) {
+                // Force clear all changes
+                // TODO: fix that
+                $definition->setChanges([]);
                 $this->containerBuilder->setDefinition($class, $definition);
             } elseif ($definition instanceof Reference) {
                 $this->containerBuilder->set($class, $definition);
@@ -95,17 +98,20 @@ class DefinitionConverter
         return $definition;
     }
 
-    private function processArguments(array $arguments)
+    private function processArguments(array $arguments): array
     {
         $result = [];
         foreach ($arguments as $key => $argument) {
-            if ($key === 'App\\Blog\\PostRepository') {
-                $var = true;
+            $processedArgument = $this->processArgument($argument);
+            if ($processedArgument instanceof Definition) {
+                // Force clear all changes
+                // TODO: fix that
+                $processedArgument->setChanges([]);
             }
             if (!is_numeric($key)) {
-                $result['$' . $key] = $this->processArgument($argument);
+                $result['$' . $key] = $processedArgument;
             } else {
-                $result[] = $this->processArgument($argument);
+                $result[] = $processedArgument;
             }
         }
         return $result;
@@ -138,7 +144,6 @@ class DefinitionConverter
         }
 
         if ($argument instanceof ArrayDefinition) {
-//            dd($argument);
             return new Definition(
                 $argument->getClass(),
                 $this->processArguments($argument->getConstructorArguments())
