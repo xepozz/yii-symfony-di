@@ -30,7 +30,7 @@ class ConverterTest extends TestCase
     public function convertDataProvider()
     {
         return [
-            [
+            'simple' => [
                 [
                     FlexibleStub::class => [
                         'class' => FlexibleStub::class,
@@ -46,7 +46,79 @@ class ConverterTest extends TestCase
                         ->build(),
                 ],
             ],
-            [
+            'aliases' => [
+                [
+                    'alias_for_flexible' => [
+                        'class' => FlexibleStub::class,
+                        '__construct()' => [
+                            12345,
+                        ],
+                    ],
+                ],
+                [
+                    'alias_for_flexible' => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withArguments(12345)
+                        ->build(),
+                ],
+            ],
+            'different argument types' => [
+                [
+                    'int' => [
+                        'class' => FlexibleStub::class,
+                        '__construct()' => [
+                            12345,
+                        ],
+                    ],
+                    'string' => [
+                        'class' => FlexibleStub::class,
+                        '__construct()' => [
+                            'string',
+                        ],
+                    ],
+                    'float' => [
+                        'class' => FlexibleStub::class,
+                        '__construct()' => [
+                            10.12345,
+                        ],
+                    ],
+                    'null' => [
+                        'class' => FlexibleStub::class,
+                        '__construct()' => [
+                            null,
+                        ],
+                    ],
+                    'array' => [
+                        'class' => FlexibleStub::class,
+                        '__construct()' => [
+                            ['key' => 'value'],
+                        ],
+                    ],
+                ],
+                [
+                    'int' => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withArguments(12345)
+                        ->build(),
+                    'string' => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withArguments('string')
+                        ->build(),
+                    'float' => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withArguments(10.12345)
+                        ->build(),
+                    'null' => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withArguments(null)
+                        ->build(),
+                    'array' => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withArguments(['key' => 'value'])
+                        ->build(),
+                ],
+            ],
+            'multiple arguments' => [
                 [
                     ScalarStub::class => [
                         'class' => ScalarStub::class,
@@ -70,23 +142,7 @@ class ConverterTest extends TestCase
                         ->build(),
                 ],
             ],
-            [
-                [
-                    'alias_for_flexible' => [
-                        'class' => FlexibleStub::class,
-                        '__construct()' => [
-                            12345,
-                        ],
-                    ],
-                ],
-                [
-                    'alias_for_flexible' => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
-                        ->withArguments(12345)
-                        ->build(),
-                ],
-            ],
-            [
+            'the same object' => [
                 [
                     'alias_for_flexible' => [
                         'class' => FlexibleStub::class,
@@ -112,7 +168,26 @@ class ConverterTest extends TestCase
                         ->build(),
                 ],
             ],
-
+            'array as argument' => [
+                [
+                    FlexibleStub::class => [
+                        'class' => FlexibleStub::class,
+                        '__construct()' => [
+                            [
+                                'key' => 'value'
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    FlexibleStub::class => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withArguments([
+                            'key' => 'value'
+                        ])
+                        ->build(),
+                ],
+            ],
         ];
     }
 
