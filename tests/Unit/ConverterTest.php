@@ -6,6 +6,7 @@ namespace App\Tests\Unit;
 use App\DefinitionConverter;
 use App\Tests\Helper\SymfonyDefinitionBuilder;
 use App\Tests\Stub\FlexibleStub;
+use App\Tests\Stub\ScalarStub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition as SymfonyDefinition;
@@ -42,7 +43,73 @@ class ConverterTest extends TestCase
                     FlexibleStub::class => SymfonyDefinitionBuilder::new()
                         ->withClass(FlexibleStub::class)
                         ->withArguments(12345)
-                    ->build(),
+                        ->build(),
+                ],
+            ],
+            [
+                [
+                    ScalarStub::class => [
+                        'class' => ScalarStub::class,
+                        '__construct()' => [
+                            'Dmitry',
+                            100,
+                            100.5,
+                            null,
+                        ],
+                    ],
+                ],
+                [
+                    ScalarStub::class => SymfonyDefinitionBuilder::new()
+                        ->withClass(ScalarStub::class)
+                        ->withArguments(
+                            'Dmitry',
+                            100,
+                            100.5,
+                            null
+                        )
+                        ->build(),
+                ],
+            ],
+            [
+                [
+                    'alias_for_flexible' => [
+                        'class' => FlexibleStub::class,
+                        '__construct()' => [
+                            12345,
+                        ],
+                    ],
+                ],
+                [
+                    'alias_for_flexible' => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withArguments(12345)
+                        ->build(),
+                ],
+            ],
+            [
+                [
+                    'alias_for_flexible' => [
+                        'class' => FlexibleStub::class,
+                        '__construct()' => [
+                            56789,
+                        ],
+                    ],
+                    FlexibleStub::class => [
+                        'class' => FlexibleStub::class,
+                        '__construct()' => [
+                            12345,
+                        ],
+                    ],
+                ],
+                [
+                    'alias_for_flexible' => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withArguments(56789)
+                        ->build(),
+                    FlexibleStub::class => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withArguments(12345)
+                        ->build(),
                 ],
             ],
 
