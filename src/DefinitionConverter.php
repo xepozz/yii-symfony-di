@@ -81,7 +81,6 @@ class DefinitionConverter
             $class = $yiiDefinition['class'] ?? $class;
             if (isset($yiiDefinition['definition'])) {
                 $definition = new CallableDefinition($class);
-                $definition->setLazy(true);
                 $definition->setClosure(($yiiDefinition['definition']));
                 return $definition;
             }
@@ -92,8 +91,7 @@ class DefinitionConverter
             $definition->setArguments($arguments);
         } else if (is_callable($yiiDefinition)) {
             $definition = new CallableDefinition();
-            $definition->setLazy(true);
-//            $definition->setClosure(new SerializableClosure($yiiDefinition));
+            $definition->setClosure(new SerializableClosure($yiiDefinition));
             return $definition;
         } elseif (is_object($yiiDefinition)) {
             $definition = new InlineDefinition();
@@ -135,9 +133,7 @@ class DefinitionConverter
     {
         if ($argument instanceof Closure) {
             $definition = new CallableDefinition();
-            $definition->setLazy(true);
             $definition->setClosure($argument);
-//            dd($argument);
             return $argument;
         }
 //        if (is_string($argument)) {
@@ -181,7 +177,6 @@ class DefinitionConverter
 
         if (is_object($argument)) {
             $definition = new CallableDefinition(get_class($argument));
-            $definition->setLazy(true);
             $definition->setClosure($argument);
             $serviceId = get_class($argument) . spl_object_id($argument);
 //            dd($argument);

@@ -13,7 +13,6 @@ class CallableDefinitionBuilder
     private function __construct()
     {
         $this->definition = new CallableDefinition();
-        $this->definition->setLazy(true);
     }
 
     public static function new()
