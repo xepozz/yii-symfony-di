@@ -13,8 +13,13 @@ class FlexibleStub
         $this->param = $param;
     }
 
-    public function setParam($value)
+    public function setParam($value): void
     {
         $this->param = $value;
+    }
+
+    public function setPublic($public): void
+    {
+        $this->public = $public;
     }
 }

@@ -33,7 +33,7 @@ abstract class DefinitionConverterTestCase extends TestCase
         return [
             'simple' => [
                 [
-                    FlexibleStub::class =>  FlexibleStub::class,
+                    FlexibleStub::class => FlexibleStub::class,
                 ],
                 [
                     FlexibleStub::class => SymfonyDefinitionBuilder::new()
@@ -64,7 +64,8 @@ abstract class DefinitionConverterTestCase extends TestCase
                         '__construct()' => [
                             12345,
                         ],
-                        'setParam()' => [555]
+                        'setParam()' => [555],
+                        'setPublic()' => [777],
                     ],
                 ],
                 [
@@ -72,6 +73,7 @@ abstract class DefinitionConverterTestCase extends TestCase
                         ->withClass(FlexibleStub::class)
                         ->withArguments(12345)
                         ->withMethodCall('setParam', 555)
+                        ->withMethodCall('setPublic', 777)
                         ->build(),
                 ],
             ],
@@ -79,7 +81,7 @@ abstract class DefinitionConverterTestCase extends TestCase
                 [
                     FlexibleStub::class => [
                         'class' => FlexibleStub::class,
-                        '$public' => 666
+                        '$public' => 666,
                     ],
                 ],
                 [
@@ -285,7 +287,7 @@ abstract class DefinitionConverterTestCase extends TestCase
                     'alias' => [
                         'class' => FlexibleStub::class,
                         '__construct()' => [
-                            fn() => new FlexibleStub(null),
+                            fn() => new FlexibleStub(),
                         ],
                     ],
                 ],
@@ -293,7 +295,7 @@ abstract class DefinitionConverterTestCase extends TestCase
                     'alias' => SymfonyDefinitionBuilder::new()
                         ->withClass(FlexibleStub::class)
                         ->withArguments(
-                            fn() => new FlexibleStub(null)
+                            fn() => new FlexibleStub()
                         )
                         ->build(),
                 ],
@@ -302,12 +304,12 @@ abstract class DefinitionConverterTestCase extends TestCase
                 [
                     'alias' => [
                         'class' => FlexibleStub::class,
-                        'definition' => fn() => new FlexibleStub(null),
+                        'definition' => fn() => new FlexibleStub(),
                     ],
                 ],
                 [
                     'alias' => CallableDefinitionBuilder::new()
-                        ->withCallable(fn() => new FlexibleStub(null))
+                        ->withCallable(fn() => new FlexibleStub())
                         ->withClass(FlexibleStub::class)
                         ->build(),
                 ],
