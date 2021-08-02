@@ -6,6 +6,7 @@ namespace App;
 use Closure;
 use Opis\Closure\SerializableClosure;
 use ReflectionObject;
+use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
@@ -31,8 +32,8 @@ class DefinitionConverter
             $definition = $this->creatDefinition($class, $yiiDefinition);
             if ($definition instanceof Definition) {
                 $this->containerBuilder->setDefinition($class, $definition);
-            } elseif ($definition instanceof Reference) {
-                $this->containerBuilder->set($class, $definition);
+            } elseif ($definition instanceof Alias) {
+                $this->containerBuilder->setAlias($class, $definition);
             } else {
                 $this->containerBuilder->setDefinition($class, $definition);
                 $this->containerBuilder->set($class, $definition);
@@ -81,7 +82,9 @@ class DefinitionConverter
         }
 
         if (is_string($yiiDefinition) && class_exists($yiiDefinition)) {
-            return new Reference($yiiDefinition);
+            $definition = new Alias($yiiDefinition);
+            $definition->setPublic(true);
+            return $definition;
         }
 
         if (is_array($yiiDefinition)) {

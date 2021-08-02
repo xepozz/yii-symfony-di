@@ -18,7 +18,7 @@ abstract class DefinitionConverterTestCase extends TestCase
     /**
      * @dataProvider convertDataProvider
      */
-    abstract public function testConvert(array $definitions, array $expected): void;
+    abstract public function testConvert(array $definitions, array $expectedDefinitions): void;
 
     public function convertDataProvider(): array
     {
