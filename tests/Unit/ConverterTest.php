@@ -7,6 +7,9 @@ use App\CallableExpressionProvider;
 use App\CallableInitiator;
 use App\DefinitionConverter;
 use App\ObjectExpressionProvider;
+use App\Tests\Helper\SymfonyDefinitionBuilder;
+use App\Tests\Stub\FlexibleWithOptionalParameterInConstructorStub;
+use App\Tests\Stub\InterfaceStub;
 use Symfony\Bridge\ProxyManager\LazyProxy\Instantiator\RuntimeInstantiator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -29,7 +32,26 @@ final class ConverterTest extends DefinitionConverterTestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function createContainerBuilder(): ContainerBuilder
+    public function convertDataProvider(): array
+    {
+        return array_merge(parent::convertDataProvider(), [
+            'interface and reference' => [
+                [
+                    InterfaceStub::class => FlexibleWithOptionalParameterInConstructorStub::class,
+                    FlexibleWithOptionalParameterInConstructorStub::class => [
+                        'class' => FlexibleWithOptionalParameterInConstructorStub::class
+                    ],
+                ],
+                [
+                    FlexibleWithOptionalParameterInConstructorStub::class => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleWithOptionalParameterInConstructorStub::class)
+                        ->build(),
+                ],
+            ],
+        ]);
+    }
+
+    private function createContainerBuilder(): ContainerBuilder
     {
         $containerBuilder = new ContainerBuilder(null);
         $containerBuilder->setProxyInstantiator(new CallableInitiator(new RuntimeInstantiator()));

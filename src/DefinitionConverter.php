@@ -81,8 +81,10 @@ class DefinitionConverter
         }
 
         if (is_string($yiiDefinition) && class_exists($yiiDefinition)) {
-            $definition = new Definition($yiiDefinition);
-        } elseif (is_array($yiiDefinition)) {
+            return new Reference($yiiDefinition);
+        }
+
+        if (is_array($yiiDefinition)) {
             $definition = new Definition($alias);
             if (isset($yiiDefinition['definition'])) {
                 $definition = $this->creatDefinition($alias, $yiiDefinition['definition']);

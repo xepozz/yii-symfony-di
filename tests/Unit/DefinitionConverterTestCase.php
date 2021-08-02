@@ -25,10 +25,12 @@ abstract class DefinitionConverterTestCase extends TestCase
         return [
             'simple' => [
                 [
-                    FlexibleStub::class => FlexibleWithOptionalParameterInConstructorStub::class,
+                    FlexibleWithOptionalParameterInConstructorStub::class => [
+                        'class' => FlexibleWithOptionalParameterInConstructorStub::class
+                    ],
                 ],
                 [
-                    FlexibleStub::class => SymfonyDefinitionBuilder::new()
+                    FlexibleWithOptionalParameterInConstructorStub::class => SymfonyDefinitionBuilder::new()
                         ->withClass(FlexibleWithOptionalParameterInConstructorStub::class)
                         ->build(),
                 ],
