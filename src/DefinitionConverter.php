@@ -41,12 +41,12 @@ class DefinitionConverter
                 $this->containerBuilder->set($class, $definition);
             }
         }
-//        $proxy = new ContainerConfigProxy($this->containerBuilder);
-//        foreach ($yiiProviders as $yiiProvider) {
-//            /* @var ServiceProviderInterface $provider */
-//            $provider = new $yiiProvider;
-//            $provider->register($proxy);
-//        }
+        $proxy = new YiiContainerProxy($this->containerBuilder);
+        foreach ($yiiProviders as $yiiProvider) {
+            /* @var ServiceProviderInterface $provider */
+            $provider = new $yiiProvider;
+            $provider->register($proxy);
+        }
 ////        var_dump($symfonyDefenitions);
 //        $this->containerBuilder->compile();
 //        dd($this->containerBuilder->getDefinitions());
@@ -56,10 +56,10 @@ class DefinitionConverter
 //        $s = $this->containerBuilder->get(Stub1::class);
 //        dd($s);
 
-//        return $proxy;
+        return $proxy;
     }
 
-    public function parse(array $yiiDefinitions)
+    public function parse(array $yiiDefinitions): array
     {
         $definitions = [];
         foreach ($yiiDefinitions as $class => $yiiDefinition) {
@@ -71,7 +71,7 @@ class DefinitionConverter
             }
             $definitions[$class] = $definition;
         }
-        return$definitions;
+        return $definitions;
     }
 
     private function creatDefinition(string $alias, $yiiDefinition)
@@ -92,12 +92,12 @@ class DefinitionConverter
 
         if (is_string($yiiDefinition) && class_exists($yiiDefinition)) {
             $definition->setClass($yiiDefinition);
-        }elseif (is_array($yiiDefinition)) {
+        } elseif (is_array($yiiDefinition)) {
             if (isset($yiiDefinition['definition'])) {
                 $definition = $this->creatDefinition($alias, $yiiDefinition['definition']);
             }
             foreach ($yiiDefinition as $key => $value) {
-                switch (true){
+                switch (true) {
                     case $key === 'class':
                         $definition->setClass($value);
                         break;
