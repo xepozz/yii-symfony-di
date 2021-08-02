@@ -42,6 +42,7 @@ class SymfonyDefinitionBuilder
         $new->definition->setArguments($arguments);
         return $new;
     }
+
     public function withPublic(bool $public)
     {
         $new = clone $this;
@@ -62,6 +63,14 @@ class SymfonyDefinitionBuilder
         $new->definition->setAutowired($autowired);
         return $new;
     }
+
+    public function withMethodCall(string $methodName, $value)
+    {
+        $new = clone $this;
+        $new->definition->addMethodCall($methodName, [$value]);
+        return $new;
+    }
+
 
     public function build()
     {

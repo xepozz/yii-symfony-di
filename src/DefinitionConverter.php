@@ -47,8 +47,8 @@ class DefinitionConverter
 //            $provider = new $yiiProvider;
 //            $provider->register($proxy);
 //        }
-//        var_dump($symfonyDefenitions);
-        $this->containerBuilder->compile();
+////        var_dump($symfonyDefenitions);
+//        $this->containerBuilder->compile();
 //        dd($this->containerBuilder->getDefinitions());
 //        $loader = new PhpFileLoader($this->containerBuilder, new FileLocator(__DIR__ . '/../config'));
 //        $loader->load('services.php');
@@ -76,37 +76,46 @@ class DefinitionConverter
 
     private function creatDefinition(string $class, $yiiDefinition)
     {
-        $definition = new Definition($class);
-        if (is_array($yiiDefinition)) {
-            $class = $yiiDefinition['class'] ?? $class;
-            if (isset($yiiDefinition['definition'])) {
-                $definition = new CallableDefinition($class);
-                $definition->setClosure(($yiiDefinition['definition']));
-                return $definition;
-            }
-            $arguments = $yiiDefinition['__construct()'] ?? [];
-            $arguments = $this->processArguments($arguments);
-
-            $definition->setClass($class);
-            $definition->setArguments($arguments);
-        } else if (is_callable($yiiDefinition)) {
+        if (is_callable($yiiDefinition)) {
             $definition = new CallableDefinition();
-            $definition->setClosure(new SerializableClosure($yiiDefinition));
+            $definition->setClosure(($yiiDefinition));
             return $definition;
-        } elseif (is_object($yiiDefinition)) {
+        }
+        if (is_object($yiiDefinition)) {
             $definition = new InlineDefinition();
             $definition->setClass($class);
             $definition->setLazy(true);
             $definition->setObject($yiiDefinition);
             return $definition;
-        } else if (is_string($yiiDefinition) && class_exists($yiiDefinition)) {
-            $definition->setClass($yiiDefinition);
-            return $definition;
         }
+        $definition = new Definition($class);
+
+        if (is_string($yiiDefinition) && class_exists($yiiDefinition)) {
+            $definition->setClass($yiiDefinition);
+        }elseif (is_array($yiiDefinition)) {
+            if (isset($yiiDefinition['definition'])) {
+                $definition = $this->creatDefinition($class, $yiiDefinition['definition']);
+            }
+            foreach ($yiiDefinition as $key => $value) {
+                switch (true){
+                    case $key === 'class':
+                        $definition->setClass($value);
+                        break;
+                    case $key === '__construct()':
+                        $arguments = $this->processArguments($value);
+                        $definition->setArguments($arguments);
+                        break;
+                    case substr($key, -2, 2) === '()':
+                        $definition->addMethodCall(substr($key, 0, -2), $value);
+                        break;
+                }
+            }
+        }
+
         $definition->setPublic(true);
-//        $definition->setShared(true);
         $definition->setAutowired(true);
         $definition->setAutoconfigured(true);
+
         return $definition;
     }
 

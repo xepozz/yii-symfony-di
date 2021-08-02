@@ -12,6 +12,8 @@ class CallableDefinition extends Definition
         parent::__construct($class, $arguments);
         $this->setLazy(true);
         $this->setPublic(true);
+        $this->setAutowired(true);
+        $this->setAutoconfigured(true);
     }
 
     /**

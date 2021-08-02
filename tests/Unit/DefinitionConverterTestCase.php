@@ -33,6 +33,16 @@ abstract class DefinitionConverterTestCase extends TestCase
         return [
             'simple' => [
                 [
+                    FlexibleStub::class =>  FlexibleStub::class,
+                ],
+                [
+                    FlexibleStub::class => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->build(),
+                ],
+            ],
+            'simple with __construct()' => [
+                [
                     FlexibleStub::class => [
                         'class' => FlexibleStub::class,
                         '__construct()' => [
@@ -44,6 +54,24 @@ abstract class DefinitionConverterTestCase extends TestCase
                     FlexibleStub::class => SymfonyDefinitionBuilder::new()
                         ->withClass(FlexibleStub::class)
                         ->withArguments(12345)
+                        ->build(),
+                ],
+            ],
+            'simple with methods' => [
+                [
+                    FlexibleStub::class => [
+                        'class' => FlexibleStub::class,
+                        '__construct()' => [
+                            12345,
+                        ],
+                        'setParam()' => [555]
+                    ],
+                ],
+                [
+                    FlexibleStub::class => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withArguments(12345)
+                        ->withMethodCall('setParam', 555)
                         ->build(),
                 ],
             ],
