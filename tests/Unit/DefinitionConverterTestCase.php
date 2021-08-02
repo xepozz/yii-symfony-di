@@ -302,6 +302,17 @@ abstract class DefinitionConverterTestCase extends TestCase
             ],
             'parse callable definition' => [
                 [
+                    FlexibleStub::class => fn() => new FlexibleStub(),
+                ],
+                [
+                    FlexibleStub::class => CallableDefinitionBuilder::new()
+                        ->withCallable(fn() => new FlexibleStub())
+                        ->withClass(FlexibleStub::class)
+                        ->build(),
+                ],
+            ],
+            'parse callable meta definition' => [
+                [
                     'alias' => [
                         'class' => FlexibleStub::class,
                         'definition' => fn() => new FlexibleStub(),
