@@ -59,10 +59,11 @@ class SymfonyContainerWrapper
         $this->ignoreNonServices($serviceConfigurator);
 
 
-       $proxy = $this->wrapInternal($containerBuilder, $yiiDefinitions, $yiiProviders);
+        $definitionConverter = new DefinitionConverter($containerBuilder);
+        $proxy = $definitionConverter->wrap($yiiDefinitions, $yiiProviders);
 
         $isDebug = false;
-        $file = __DIR__ .'/../cache/container.php';
+        $file = __DIR__ . '/../cache/container.php';
 //        dd($file);
         $containerConfigCache = new ConfigCache($file, $isDebug);
 
