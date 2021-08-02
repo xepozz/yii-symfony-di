@@ -74,27 +74,27 @@ class DefinitionConverter
         return$definitions;
     }
 
-    private function creatDefinition(string $class, $yiiDefinition)
+    private function creatDefinition(string $alias, $yiiDefinition)
     {
         if (is_callable($yiiDefinition)) {
-            $definition = new CallableDefinition();
+            $definition = new CallableDefinition($alias);
             $definition->setClosure(($yiiDefinition));
             return $definition;
         }
         if (is_object($yiiDefinition)) {
             $definition = new InlineDefinition();
-            $definition->setClass($class);
+            $definition->setClass($alias);
             $definition->setLazy(true);
             $definition->setObject($yiiDefinition);
             return $definition;
         }
-        $definition = new Definition($class);
+        $definition = new Definition($alias);
 
         if (is_string($yiiDefinition) && class_exists($yiiDefinition)) {
             $definition->setClass($yiiDefinition);
         }elseif (is_array($yiiDefinition)) {
             if (isset($yiiDefinition['definition'])) {
-                $definition = $this->creatDefinition($class, $yiiDefinition['definition']);
+                $definition = $this->creatDefinition($alias, $yiiDefinition['definition']);
             }
             foreach ($yiiDefinition as $key => $value) {
                 switch (true){
