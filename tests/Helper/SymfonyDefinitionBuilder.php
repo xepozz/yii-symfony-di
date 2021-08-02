@@ -7,7 +7,7 @@ use Symfony\Component\DependencyInjection\Definition;
 
 class SymfonyDefinitionBuilder
 {
-    private Definition $definition;
+    protected Definition $definition;
 
     private function __construct()
     {
@@ -19,7 +19,7 @@ class SymfonyDefinitionBuilder
 
     public static function new()
     {
-        return new self();
+        return new static();
     }
 
     public function withClass($class)
@@ -33,6 +33,14 @@ class SymfonyDefinitionBuilder
     {
         $new = clone $this;
         $new->definition->setLazy($lazy);
+        if (!$lazy) {
+            $new->definition->setChanges(
+                array_diff_assoc(
+                    $new->definition->getChanges(),
+                    ['lazy' => true]
+                )
+            );
+        }
         return $new;
     }
 
@@ -47,6 +55,14 @@ class SymfonyDefinitionBuilder
     {
         $new = clone $this;
         $new->definition->setPublic($public);
+        if (!$public) {
+            $new->definition->setChanges(
+                array_diff_assoc(
+                    $new->definition->getChanges(),
+                    ['public' => true]
+                )
+            );
+        }
         return $new;
     }
 
@@ -54,6 +70,14 @@ class SymfonyDefinitionBuilder
     {
         $new = clone $this;
         $new->definition->setAutoconfigured($autoconfigured);
+        if (!$autoconfigured) {
+            $new->definition->setChanges(
+                array_diff_assoc(
+                    $new->definition->getChanges(),
+                    ['autoconfigured' => true]
+                )
+            );
+        }
         return $new;
     }
 
@@ -61,6 +85,14 @@ class SymfonyDefinitionBuilder
     {
         $new = clone $this;
         $new->definition->setAutowired($autowired);
+        if (!$autowired) {
+            $new->definition->setChanges(
+                array_diff_assoc(
+                    $new->definition->getChanges(),
+                    ['autowired' => true]
+                )
+            );
+        }
         return $new;
     }
 
@@ -81,7 +113,6 @@ class SymfonyDefinitionBuilder
 
     public function build()
     {
-        $this->definition->setChanges([]);
         return $this->definition;
     }
 

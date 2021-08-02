@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Stub;
 
-class FlexibleStub implements InterfaceStub
+class FlexibleWithOptionalParameterInConstructorStub implements InterfaceStub
 {
     private $param;
     public $public;
 
-    public function __construct($param)
+    public function __construct($param = null)
     {
         $this->param = $param;
     }

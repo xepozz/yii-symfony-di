@@ -30,9 +30,6 @@ class DefinitionConverter
         foreach ($yiiDefinitions as $class => $yiiDefinition) {
             $definition = $this->creatDefinition($class, $yiiDefinition);
             if ($definition instanceof Definition) {
-                // Force clear all changes
-                // TODO: fix that
-                $definition->setChanges([]);
                 $this->containerBuilder->setDefinition($class, $definition);
             } elseif ($definition instanceof Reference) {
                 $this->containerBuilder->set($class, $definition);
@@ -48,7 +45,7 @@ class DefinitionConverter
             $provider->register($proxy);
         }
 ////        var_dump($symfonyDefenitions);
-//        $this->containerBuilder->compile();
+        $this->containerBuilder->compile();
 //        dd($this->containerBuilder->getDefinitions());
 //        $loader = new PhpFileLoader($this->containerBuilder, new FileLocator(__DIR__ . '/../config'));
 //        $loader->load('services.php');
@@ -64,11 +61,6 @@ class DefinitionConverter
         $definitions = [];
         foreach ($yiiDefinitions as $class => $yiiDefinition) {
             $definition = $this->creatDefinition($class, $yiiDefinition);
-            if ($definition instanceof Definition) {
-                // Force clear all changes
-                // TODO: fix that
-                $definition->setChanges([]);
-            }
             $definitions[$class] = $definition;
         }
         return $definitions;
@@ -82,24 +74,25 @@ class DefinitionConverter
             return $definition;
         }
         if (is_object($yiiDefinition)) {
-            $definition = new InlineDefinition();
-            $definition->setClass($alias);
+            $definition = new InlineDefinition($alias);
             $definition->setLazy(true);
             $definition->setObject($yiiDefinition);
             return $definition;
         }
-        $definition = new Definition($alias);
 
         if (is_string($yiiDefinition) && class_exists($yiiDefinition)) {
-            $definition->setClass($yiiDefinition);
+            $definition = new Definition($yiiDefinition);
         } elseif (is_array($yiiDefinition)) {
+            $definition = new Definition($alias);
             if (isset($yiiDefinition['definition'])) {
                 $definition = $this->creatDefinition($alias, $yiiDefinition['definition']);
             }
             foreach ($yiiDefinition as $key => $value) {
                 switch (true) {
                     case $key === 'class':
-                        $definition->setClass($value);
+                        if ($value !== $alias) {
+                            $definition->setClass($value);
+                        }
                         break;
                     case $key === '__construct()':
                         $arguments = $this->processArguments($value);
@@ -127,11 +120,7 @@ class DefinitionConverter
         $result = [];
         foreach ($arguments as $key => $argument) {
             $processedArgument = $this->processArgument($argument);
-            if ($processedArgument instanceof Definition) {
-                // Force clear all changes
-                // TODO: fix that
-                $processedArgument->setChanges([]);
-            }
+
             if (!is_numeric($key)) {
                 $result['$' . $key] = $processedArgument;
             } else {

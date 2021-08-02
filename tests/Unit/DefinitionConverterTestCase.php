@@ -3,20 +3,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit;
 
-use App\CallableDefinition;
-use App\CallableExpressionProvider;
-use App\CallableInitiator;
-use App\DefinitionConverter;
-use App\ObjectExpressionProvider;
 use App\Tests\Helper\CallableDefinitionBuilder;
 use App\Tests\Helper\SymfonyDefinitionBuilder;
 use App\Tests\Stub\FlexibleStub;
+use App\Tests\Stub\FlexibleWithOptionalParameterInConstructorStub;
 use App\Tests\Stub\ScalarStub;
-use Opis\Closure\SerializableClosure;
 use PHPUnit\Framework\TestCase;
-use Symfony\Bridge\ProxyManager\LazyProxy\Instantiator\RuntimeInstantiator;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Definition as SymfonyDefinition;
 use Symfony\Component\DependencyInjection\Reference as SymfonyReference;
 use Yiisoft\Factory\Definition\DynamicReference;
 use Yiisoft\Factory\Definition\Reference;
@@ -33,11 +25,11 @@ abstract class DefinitionConverterTestCase extends TestCase
         return [
             'simple' => [
                 [
-                    FlexibleStub::class => FlexibleStub::class,
+                    FlexibleStub::class => FlexibleWithOptionalParameterInConstructorStub::class,
                 ],
                 [
                     FlexibleStub::class => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
+                        ->withClass(FlexibleWithOptionalParameterInConstructorStub::class)
                         ->build(),
                 ],
             ],
@@ -79,14 +71,14 @@ abstract class DefinitionConverterTestCase extends TestCase
             ],
             'simple with properties' => [
                 [
-                    FlexibleStub::class => [
-                        'class' => FlexibleStub::class,
+                    FlexibleWithOptionalParameterInConstructorStub::class => [
+                        'class' => FlexibleWithOptionalParameterInConstructorStub::class,
                         '$public' => 666,
                     ],
                 ],
                 [
-                    FlexibleStub::class => SymfonyDefinitionBuilder::new()
-                        ->withClass(FlexibleStub::class)
+                    FlexibleWithOptionalParameterInConstructorStub::class => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleWithOptionalParameterInConstructorStub::class)
                         ->withPropertySet('public', 666)
                         ->build(),
                 ],
@@ -287,7 +279,7 @@ abstract class DefinitionConverterTestCase extends TestCase
                     'alias' => [
                         'class' => FlexibleStub::class,
                         '__construct()' => [
-                            fn() => new FlexibleStub(),
+                            fn() => new FlexibleWithOptionalParameterInConstructorStub(),
                         ],
                     ],
                 ],
@@ -295,33 +287,33 @@ abstract class DefinitionConverterTestCase extends TestCase
                     'alias' => SymfonyDefinitionBuilder::new()
                         ->withClass(FlexibleStub::class)
                         ->withArguments(
-                            fn() => new FlexibleStub()
+                            fn() => new FlexibleWithOptionalParameterInConstructorStub()
                         )
                         ->build(),
                 ],
             ],
             'parse callable definition' => [
                 [
-                    FlexibleStub::class => fn() => new FlexibleStub(),
+                    FlexibleWithOptionalParameterInConstructorStub::class => fn() => new FlexibleWithOptionalParameterInConstructorStub(),
                 ],
                 [
-                    FlexibleStub::class => CallableDefinitionBuilder::new()
-                        ->withCallable(fn() => new FlexibleStub())
-                        ->withClass(FlexibleStub::class)
+                    FlexibleWithOptionalParameterInConstructorStub::class => CallableDefinitionBuilder::new()
+                        ->withCallable(fn() => new FlexibleWithOptionalParameterInConstructorStub())
+                        ->withClass(FlexibleWithOptionalParameterInConstructorStub::class)
                         ->build(),
                 ],
             ],
             'parse callable meta definition' => [
                 [
                     'alias' => [
-                        'class' => FlexibleStub::class,
-                        'definition' => fn() => new FlexibleStub(),
+                        'class' => FlexibleWithOptionalParameterInConstructorStub::class,
+                        'definition' => fn() => new FlexibleWithOptionalParameterInConstructorStub(),
                     ],
                 ],
                 [
                     'alias' => CallableDefinitionBuilder::new()
-                        ->withCallable(fn() => new FlexibleStub())
-                        ->withClass(FlexibleStub::class)
+                        ->withCallable(fn() => new FlexibleWithOptionalParameterInConstructorStub())
+                        ->withClass(FlexibleWithOptionalParameterInConstructorStub::class)
                         ->build(),
                 ],
             ],
