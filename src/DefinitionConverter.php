@@ -105,8 +105,11 @@ class DefinitionConverter
                         $arguments = $this->processArguments($value);
                         $definition->setArguments($arguments);
                         break;
-                    case substr($key, -2, 2) === '()':
+                    case str_ends_with($key, '()'):
                         $definition->addMethodCall(substr($key, 0, -2), $value);
+                        break;
+                    case str_starts_with($key, '$'):
+                        $definition->setProperty(substr($key, 1), $value);
                         break;
                 }
             }

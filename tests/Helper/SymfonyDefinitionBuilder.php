@@ -71,6 +71,13 @@ class SymfonyDefinitionBuilder
         return $new;
     }
 
+    public function withPropertySet(string $propertyName, $value)
+    {
+        $new = clone $this;
+        $new->definition->setProperty($propertyName, $value);
+        return $new;
+    }
+
 
     public function build()
     {

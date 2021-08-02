@@ -75,6 +75,20 @@ abstract class DefinitionConverterTestCase extends TestCase
                         ->build(),
                 ],
             ],
+            'simple with properties' => [
+                [
+                    FlexibleStub::class => [
+                        'class' => FlexibleStub::class,
+                        '$public' => 666
+                    ],
+                ],
+                [
+                    FlexibleStub::class => SymfonyDefinitionBuilder::new()
+                        ->withClass(FlexibleStub::class)
+                        ->withPropertySet('public', 666)
+                        ->build(),
+                ],
+            ],
             'aliases' => [
                 [
                     'alias_for_flexible' => [

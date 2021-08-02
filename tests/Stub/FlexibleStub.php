@@ -6,6 +6,7 @@ namespace App\Tests\Stub;
 class FlexibleStub
 {
     private $param;
+    public $public;
 
     public function __construct($param = null)
     {
