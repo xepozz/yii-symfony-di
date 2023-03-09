@@ -10,8 +10,8 @@ use App\Tests\Stub\FlexibleWithOptionalParameterInConstructorStub;
 use App\Tests\Stub\ScalarStub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Reference as SymfonyReference;
-use Yiisoft\Factory\Definition\DynamicReference;
-use Yiisoft\Factory\Definition\Reference;
+use Yiisoft\Definitions\DynamicReference;
+use Yiisoft\Definitions\Reference;
 
 abstract class DefinitionConverterTestCase extends TestCase
 {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App;
 
 use Closure;
+use HttpSoft\Message\ServerRequestFactory;
 use Opis\Closure\SerializableClosure;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\RequestInterface;
@@ -32,23 +33,17 @@ use Symfony\Component\ExpressionLanguage\Expression;
 use Throwable;
 use Yiisoft\Config\Config;
 use Yiisoft\Di\Container;
-use Yiisoft\Di\Contracts\ServiceProviderInterface;
 use Yiisoft\ErrorHandler\ErrorHandler;
 use Yiisoft\ErrorHandler\Middleware\ErrorCatcher;
 use Yiisoft\ErrorHandler\Renderer\HtmlRenderer;
 use Yiisoft\ErrorHandler\Renderer\JsonRenderer;
-use Yiisoft\Factory\Definition\ArrayDefinition;
-use Yiisoft\Factory\Definition\DefinitionInterface;
-use Yiisoft\Factory\Definition\DynamicReference;
 use Yiisoft\Http\Method;
 use Yiisoft\Log\Logger;
 use Yiisoft\Log\Target\File\FileTarget;
 use Yiisoft\Router\RouteCollectionInterface;
 use Yiisoft\View\View;
-use Yiisoft\Yii\Event\ListenerConfigurationChecker;
-use Yiisoft\Yii\Web\Application;
-use Yiisoft\Yii\Web\SapiEmitter;
-use Yiisoft\Yii\Web\ServerRequestFactory;
+
+use Yiisoft\Yii\Http\Application;
 
 use function dirname;
 use function microtime;

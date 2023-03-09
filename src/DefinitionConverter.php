@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App;
@@ -11,10 +12,9 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\ExpressionLanguage\Expression;
-use Yiisoft\Di\Contracts\ServiceProviderInterface;
-use Yiisoft\Factory\Definition\ArrayDefinition;
-use Yiisoft\Factory\Definition\DefinitionInterface;
-use Yiisoft\Factory\Definition\DynamicReference;
+use Yiisoft\Definitions\ArrayDefinition;
+use Yiisoft\Definitions\Contract\DefinitionInterface;
+use Yiisoft\Definitions\DynamicReference;
 
 class DefinitionConverter
 {
@@ -145,8 +145,8 @@ class DefinitionConverter
 //        if (is_string($argument)) {
 //            return new Reference($argument);
 //        }
-        if ($argument instanceof \Yiisoft\Factory\Definition\Reference) {
-            $id = $argument->getId();
+        if ($argument instanceof \Yiisoft\Definitions\Reference) {
+            $id = Closure::bind(fn () => $argument->id, $argument, $argument)();
             return new Reference($id);
         }
 
@@ -166,16 +166,18 @@ class DefinitionConverter
             );
         }
 
-        if ($argument instanceof \Yiisoft\Factory\Definition\CallableDefinition) {
+        if ($argument instanceof \Yiisoft\Definitions\CallableDefinition) {
             $ref = new ReflectionObject($argument);
             $def = $ref->getProperty('method');
             $def->setAccessible(true);
             /* @var callable $val */
             $val = $def->getValue($argument);
-            $definition = new Expression(sprintf(
-                'closure("%s")',
-                preg_quote(serialize(new SerializableClosure($val)), '"')
-            ));
+            $definition = new Expression(
+                sprintf(
+                    'closure("%s")',
+                    preg_quote(serialize(new SerializableClosure($val)), '"')
+                )
+            );
 //            $definition->setClass('qq');
 //            $definition->setClosure($this->processArgument($val));
             return $definition;
@@ -188,10 +190,12 @@ class DefinitionConverter
 //            dd($argument);
 //            $inline = new InlineServiceConfigurator($definition);
 //            $inline->args([444]);
-            $definition = new Expression(sprintf(
-                'object("%s")',
-                preg_quote(serialize($argument), '"')
-            ));
+            $definition = new Expression(
+                sprintf(
+                    'object("%s")',
+                    preg_quote(serialize($argument), '"')
+                )
+            );
 //            self::$staticArguments[$serviceId] = $definition;
 
             return $definition;

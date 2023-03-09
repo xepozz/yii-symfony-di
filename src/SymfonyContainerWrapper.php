@@ -21,10 +21,6 @@ use Symfony\Component\ExpressionLanguage\Expression;
 use Throwable;
 use Yiisoft\Config\Config;
 use Yiisoft\Di\Container;
-use Yiisoft\Di\Contracts\ServiceProviderInterface;
-use Yiisoft\Factory\Definition\ArrayDefinition;
-use Yiisoft\Factory\Definition\DefinitionInterface;
-use Yiisoft\Factory\Definition\DynamicReference;
 
 class SymfonyContainerWrapper
 {
@@ -191,7 +187,7 @@ class MyContainerBuilder extends ContainerBuilder
         parent::__construct();
     }
 
-    public function get(string $id, int $invalidBehavior = SymfonyContainerInterface::EXCEPTION_ON_INVALID_REFERENCE)
+    public function get(string $id, int $invalidBehavior = SymfonyContainerInterface::EXCEPTION_ON_INVALID_REFERENCE): ?object
     {
         try {
             return parent::get($id, $invalidBehavior);
